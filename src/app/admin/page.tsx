@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { CashList } from "@/components/cash-list";
 import { SaleList } from "@/components/sale-list";
 import { Badge, buttonClass, Card, Loading, Progress, Stat } from "@/components/ui";
 import { db } from "@/db";
 import { requireOwner } from "@/lib/auth/session";
+import { CHECK_LABEL } from "@/lib/labels";
 import { formatDateLong, formatQty, formatRupiah, isIsoDate, shiftDate, todayInBali } from "@/lib/time";
 import { capitalProgress, dailyTotals, emptyDay, fixedCostDaily, getSettings, itemSummary } from "@/services/reports";
+import { listCashMovements } from "@/services/cash";
 import { listSales } from "@/services/sales";
 import { listLowStock } from "@/services/stock";
 
@@ -27,13 +30,16 @@ async function Rekap({ searchParams }: { searchParams: PageProps<"/admin">["sear
   const date = isIsoDate(raw) && raw <= today ? raw : today;
   const isToday = date === today;
 
-  const [[day = emptyDay(date)], items, settings, sales, low] = await Promise.all([
+  const [[day = emptyDay(date)], items, settings, sales, low, cashRows] = await Promise.all([
     dailyTotals(db, date, date),
     itemSummary(db, date),
     getSettings(db),
     listSales(db, { businessDate: date }),
     listLowStock(db),
+    listCashMovements(db, { businessDate: date }),
   ]);
+  const cashIn = cashRows.filter((r) => r.type === "masuk").reduce((s, r) => s + r.amount, 0);
+  const cashOut = cashRows.filter((r) => r.type === "keluar").reduce((s, r) => s + r.amount, 0);
   const capital = await capitalProgress(db, settings, today);
 
   const fixed = fixedCostDaily(settings);
@@ -164,7 +170,7 @@ async function Rekap({ searchParams }: { searchParams: PageProps<"/admin">["sear
                 <li key={l.id} className="flex justify-between gap-2">
                   <span>{l.name}</span>
                   {l.tracking === "manual" ? (
-                    <Badge tone={l.checkStatus === "habis" ? "bad" : "warn"}>{l.checkStatus}</Badge>
+                    <Badge tone={l.checkStatus === "habis" ? "bad" : "warn"}>{CHECK_LABEL[l.checkStatus ?? "aman"]}</Badge>
                   ) : (
                     <span className={`num ${l.stock <= 0 ? "font-semibold text-cabai" : "text-kopi-muted"}`}>
                       {formatQty(l.stock)} {l.unit}
@@ -177,9 +183,26 @@ async function Rekap({ searchParams }: { searchParams: PageProps<"/admin">["sear
         </Card>
       </div>
 
+      <Card>
+        <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-semibold">Kas masuk / keluar</h2>
+          <p className="num text-sm">
+            <span className="text-daun">+ {formatRupiah(cashIn)}</span> · <span className="text-cabai">− {formatRupiah(cashOut)}</span>
+          </p>
+        </div>
+        <p className="mb-2 text-xs text-kopi-muted">Di luar penjualan, tidak mengubah omzet atau laba kotor di atas.</p>
+        <CashList rows={cashRows} canDelete />
+      </Card>
+
       <details className="rounded-2xl border border-garis bg-white p-4">
         <summary className="cursor-pointer font-semibold">Daftar transaksi ({sales.length})</summary>
         <div className="mt-3">
+          <p className="mb-3 text-sm text-kopi-muted">
+            Mau menghapus transaksi uji coba?{" "}
+            <Link href={`/admin/transaksi?tanggal=${date}`} className="text-teh underline underline-offset-4">
+              Buka halaman Transaksi
+            </Link>
+          </p>
           <SaleList sales={sales} canVoid />
         </div>
       </details>

@@ -5,6 +5,7 @@ import { Badge, Card, Loading, Notice, PageHeading } from "@/components/ui";
 import { db } from "@/db";
 import { ingredients, stockMovements, users } from "@/db/schema";
 import { requireOwner } from "@/lib/auth/session";
+import { CHECK_LABEL } from "@/lib/labels";
 import { formatDateTime, formatQty } from "@/lib/time";
 import { isLow, listIngredients } from "@/services/stock";
 import { setCheckStatusAction } from "../actions";
@@ -132,9 +133,9 @@ async function Stok() {
                         name="status"
                         value={s}
                         aria-pressed={on}
-                        className={`press rounded-lg border px-2.5 py-1 text-sm capitalize ${on ? `${color} border-transparent text-white` : "border-garis bg-white"}`}
+                        className={`press rounded-lg border px-2.5 py-1 text-sm ${on ? `${color} border-transparent text-white` : "border-garis bg-white"}`}
                       >
-                        {s}
+                        {CHECK_LABEL[s]}
                       </button>
                     );
                   })}

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Loading } from "@/components/ui";
 import { db } from "@/db";
 import { requireUser } from "@/lib/auth/session";
+import { CHECK_LABEL } from "@/lib/labels";
 import { formatQty } from "@/lib/time";
 import { listMenuWithRecipes, sortCategories } from "@/services/catalog";
 import { getOpenShift } from "@/services/shifts";
@@ -53,9 +54,7 @@ async function KasirContent() {
         name: l.name,
         detail:
           l.tracking === "manual"
-            ? l.checkStatus === "habis"
-              ? "habis"
-              : "menipis"
+            ? CHECK_LABEL[l.checkStatus ?? "aman"].toLowerCase()
             : `sisa ${formatQty(l.stock)} ${l.unit}`,
         empty: l.tracking === "manual" ? l.checkStatus === "habis" : l.stock <= 0,
       }))}

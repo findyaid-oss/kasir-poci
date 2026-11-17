@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Badge, Card, Loading, PageHeading } from "@/components/ui";
 import { db } from "@/db";
 import { requireOwner } from "@/lib/auth/session";
+import { CHECK_LABEL } from "@/lib/labels";
 import { formatDateTime, formatRupiah, formatTime } from "@/lib/time";
 import { listShiftChecks, listShifts } from "@/services/shifts";
 
@@ -56,6 +57,9 @@ async function Shifts() {
                   <Item label="Kas awal" value={formatRupiah(s.openingCash)} />
                   <Item label="Penjualan tunai" value={formatRupiah(s.totals.cashSales)} />
                   <Item label="QRIS" value={formatRupiah(s.totals.qrisSales)} />
+                  {s.totals.cashIn || s.totals.cashOut ? (
+                    <Item label="Kas masuk / keluar" value={`+${formatRupiah(s.totals.cashIn)} / −${formatRupiah(s.totals.cashOut)}`} />
+                  ) : null}
                   <Item
                     label="Seharusnya / dihitung"
                     value={s.closedAt ? `${formatRupiah(s.expectedCash ?? 0)} / ${formatRupiah(s.countedCash ?? 0)}` : "—"}
@@ -67,13 +71,13 @@ async function Shifts() {
                     {problems.map((c) => (
                       <span key={c.name} className="mr-1">
                         <Badge tone={c.status === "habis" ? "bad" : "warn"}>
-                          {c.name} {c.status}
+                          {c.name}: {CHECK_LABEL[c.status]}
                         </Badge>
                       </span>
                     ))}
                   </p>
                 ) : s.closedAt && checks[idx].length ? (
-                  <p className="mt-2 text-sm text-daun">Cek bahan: semua aman</p>
+                  <p className="mt-2 text-sm text-daun">Cek bahan: semua masih banyak</p>
                 ) : null}
                 {s.note ? <p className="mt-2 text-sm text-kopi-muted">Catatan: {s.note}</p> : null}
               </Card>

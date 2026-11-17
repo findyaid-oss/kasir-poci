@@ -166,7 +166,7 @@ export function NewIngredientForm({ groups }: { groups: string[] }) {
       <Field label="Cara hitung" htmlFor="ni-tracking">
         <select id="ni-tracking" name="tracking" className={inputClass} defaultValue="auto">
           <option value="auto">Otomatis (berkurang tiap penjualan)</option>
-          <option value="manual">Cek manual (Aman / Menipis / Habis)</option>
+          <option value="manual">Cek manual (Masih banyak / Setengah / Habis)</option>
         </select>
       </Field>
       <div className="flex flex-col justify-end gap-2">

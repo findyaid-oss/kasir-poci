@@ -27,8 +27,9 @@ const sachet = (name: string): SeedIngredient => ({
 
 export const SEED_INGREDIENTS: SeedIngredient[] = [
   // Bahan teh
-  { name: "Teh celup Poci", group: "Bahan teh", unit: "kantong", tracking: "auto", lowThreshold: 3, packLabel: "kotak", packSize: 25 },
-  { name: "Gula pasir", group: "Bahan teh", unit: "g", tracking: "auto", lowThreshold: 500, packLabel: "bungkus 1 kg", packSize: 1000 },
+  // Teh celup & gula cukup dicek manual (Masih banyak / Setengah / Habis), tidak dihitung angkanya.
+  { name: "Teh celup Poci", group: "Cek manual", unit: "kantong", tracking: "manual", lowThreshold: 0 },
+  { name: "Gula pasir", group: "Cek manual", unit: "g", tracking: "manual", lowThreshold: 0 },
   sachet("Poci Es Teh Tarik Gula Aren"),
   sachet("Susu kental manis"),
 

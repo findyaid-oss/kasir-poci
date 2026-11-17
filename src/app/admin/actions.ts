@@ -9,6 +9,7 @@ import { requireOwner } from "@/lib/auth/session";
 import { decimal, fieldErrors, ingredientSchema, menuSchema, settingsSchema } from "@/lib/validation";
 import { saveMenuItem } from "@/services/catalog";
 import { UserError } from "@/services/errors";
+import { deleteSales, resetAllSales } from "@/services/maintenance";
 import { addPurchase, setCheckStatus, setStock } from "@/services/stock";
 import { createUser, resetPin } from "@/services/users";
 
@@ -127,6 +128,28 @@ export async function toggleMenuAction(formData: FormData) {
     .set({ isActive: not(menuItems.isActive) })
     .where(eq(menuItems.id, id));
   refresh();
+}
+
+/* ---------- Hapus & reset transaksi (untuk uji coba) ---------- */
+
+export async function deleteSalesAction(saleIds: number[]): Promise<FormState> {
+  await requireOwner();
+  if (!Array.isArray(saleIds)) return { error: "Pilih transaksi yang mau dihapus." };
+  return run(async () => {
+    const n = await deleteSales(db, saleIds.map(Number));
+    return `${n} transaksi dihapus, stoknya dikembalikan.`;
+  });
+}
+
+export async function resetAllSalesAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireOwner();
+  if (String(formData.get("confirm") ?? "").trim().toUpperCase() !== "RESET") {
+    return { error: "Ketik RESET (huruf besar) untuk memastikan." };
+  }
+  return run(async () => {
+    const n = await resetAllSales(db);
+    return `Semua penjualan direset (${n} transaksi dihapus). Kasir perlu buka kas lagi.`;
+  });
 }
 
 /* ---------- Pengaturan ---------- */

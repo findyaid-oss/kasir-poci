@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, gte, lte, min, sql } from "drizzle-orm";
-import { saleItems, sales, settings, type Settings } from "@/db/schema";
+import { cashMovements, saleItems, sales, settings, type Settings } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { daysInclusive } from "@/lib/time";
 
@@ -135,6 +135,22 @@ export async function capitalProgress(db: Db, s: Settings, today: string): Promi
     modal: s.initialCapital,
     progress: s.initialCapital > 0 ? labaBersih / s.initialCapital : 0,
   };
+}
+
+/** Kas masuk/keluar untuk ekspor Excel. */
+export async function exportCashRows(db: Db, from: string, to: string) {
+  return db
+    .select({
+      businessDate: cashMovements.businessDate,
+      createdAt: cashMovements.createdAt,
+      type: cashMovements.type,
+      amount: cashMovements.amount,
+      note: cashMovements.note,
+      by: sql<string>`(select name from users where users.id = ${cashMovements.userId})`,
+    })
+    .from(cashMovements)
+    .where(and(gte(cashMovements.businessDate, from), lte(cashMovements.businessDate, to)))
+    .orderBy(asc(cashMovements.createdAt));
 }
 
 /** Baris penjualan untuk ekspor Excel. */
