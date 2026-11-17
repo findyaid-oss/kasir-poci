@@ -6,6 +6,7 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    // Migrasi memakai koneksi langsung (unpooled) kalau ada, seperti yang disediakan integrasi Neon di Vercel.
+    url: (process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL)!,
   },
 });

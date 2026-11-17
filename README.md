@@ -91,14 +91,19 @@ Tes: `npm test`.
 
 ## Online di Vercel + Neon (gratis)
 
-1. Buat database di [neon.tech](https://neon.tech). Pilih region **Singapore** dan salin *pooled connection string*.
-2. Di komputer, isi `DATABASE_URL` di `.env` dengan connection string itu, lalu jalankan `npm run db:migrate` dan `npm run db:seed`.
-3. Di [vercel.com](https://vercel.com), import repo ini dan isi Environment Variables:
-   - `DATABASE_URL`: connection string Neon
-   - `SESSION_SECRET`: teks acak minimal 32 karakter, misalnya hasil `openssl rand -base64 32`
-4. Deploy. Buka alamatnya di HP, masuk sebagai pemilik, lalu:
+Tidak perlu menjalankan perintah apa pun di komputer. Setiap deploy, Vercel otomatis memperbarui tabel database dan mengisi data awal ([`scripts/vercel-build.sh`](scripts/vercel-build.sh)).
+
+1. Di [vercel.com](https://vercel.com), login dengan GitHub, lalu buka **Add New → Project** dan **Import** repo `kasir-poci`.
+2. Sebelum klik Deploy, buka **Environment Variables** dan isi:
+   - `SESSION_SECRET`: teks acak minimal 32 karakter
+   - `OWNER_NAME`: nama Anda sebagai pemilik
+   - `OWNER_PIN`: PIN 4–6 angka untuk login pemilik
+3. Klik **Deploy**.
+4. Hubungkan database:
+   - Buka project di Vercel → tab **Storage** → **Create Database** → **Neon**.
+   - Pilih region **Singapore**, lalu **Connect** ke project ini. `DATABASE_URL` akan terisi otomatis.
+5. Buka **Deployments**, pilih deploy terakhir, klik **⋯ → Redeploy**. Tabel, menu, dan akun pemilik dibuat otomatis.
+6. Buka alamat aplikasinya di HP dan masuk sebagai pemilik. Setelah itu:
    - Tambahkan karyawan di **Admin → Pengaturan**.
    - Isi stok awal di **Admin → Stok → Hitung ulang**.
    - Di browser HP, pilih **Tambahkan ke layar utama** supaya kasir terbuka seperti aplikasi.
-
-Kalau nanti ada perubahan struktur database (`npm run db:generate`), jalankan `npm run db:migrate` lagi ke database Neon.

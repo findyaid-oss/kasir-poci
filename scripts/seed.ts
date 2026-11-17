@@ -13,18 +13,18 @@ import type { Db } from "../src/db/types";
 import { seedCatalog } from "../src/services/catalog";
 
 async function main() {
-  const name = process.env.OWNER_NAME?.trim();
-  const pin = process.env.OWNER_PIN?.trim();
-  if (!process.env.DATABASE_URL || !name || !pin) {
-    throw new Error("Isi DATABASE_URL, OWNER_NAME, dan OWNER_PIN di file .env terlebih dahulu.");
-  }
-  if (!/^\d{4,6}$/.test(pin)) throw new Error("OWNER_PIN harus 4–6 angka.");
+  if (!process.env.DATABASE_URL) throw new Error("Isi DATABASE_URL di file .env terlebih dahulu.");
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const db = drizzle(pool, { schema }) as unknown as Db;
 
   const [owner] = await db.select().from(schema.users).where(eq(schema.users.role, "owner")).limit(1);
   if (!owner) {
+    // Akun pemilik hanya dibuat sekali; setelah itu OWNER_NAME/OWNER_PIN tidak dipakai lagi.
+    const name = process.env.OWNER_NAME?.trim();
+    const pin = process.env.OWNER_PIN?.trim();
+    if (!name || !pin) throw new Error("Isi OWNER_NAME dan OWNER_PIN untuk membuat akun pemilik pertama.");
+    if (!/^\d{4,6}$/.test(pin)) throw new Error("OWNER_PIN harus 4–6 angka.");
     await db.insert(schema.users).values({ name, role: "owner", pinHash: await bcrypt.hash(pin, 10) });
     console.log(`✓ Akun pemilik "${name}" dibuat.`);
   } else {
