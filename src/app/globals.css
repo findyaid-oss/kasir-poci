@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque/index.css";
+@import "@fontsource-variable/figtree/index.css";
+
+/*
+  Palet "Kasir Poci"
+  teh    : merah-cokelat seduhan teh, warna utama tombol
+  kopi   : cokelat tua untuk teks
+  krem   : latar hangat seperti susu
+  daun   : hijau untuk hal yang berhasil / aman
+  kunyit : kuning untuk peringatan (stok menipis)
+  cabai  : merah untuk bahaya (habis, batal, selisih kurang)
+*/
+@theme {
+  --color-teh: #9a3b12;
+  --color-teh-700: #7a2d0c;
+  --color-teh-100: #f8e6d8;
+  --color-teh-50: #fcf3ec;
+  --color-kopi: #2a1d16;
+  --color-kopi-muted: #6b5d52;
+  --color-krem: #fbf7f1;
+  --color-garis: #eadfd3;
+  --color-daun: #2f6b45;
+  --color-daun-100: #e1efe5;
+  --color-kunyit: #c98a12;
+  --color-kunyit-100: #fdf0d2;
+  --color-cabai: #b3362b;
+  --color-cabai-100: #f9e1de;
+
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-krem);
+  color: var(--color-kopi);
+  font-family: var(--font-sans);
+}
+
+/* Angka uang & stok selalu sama lebar supaya tidak "melompat" saat berubah */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-kunyit);
+  outline-offset: 2px;
+}
+
+/* Tombol menu terasa "ditekan" saat disentuh */
+.press {
+  transition: transform 80ms ease-out, background-color 120ms;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Ruang aman di bawah untuk HP berponi / gesture bar */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-in {
+    animation: sheet-in 180ms ease-out;
+  }
+  @keyframes sheet-in {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}

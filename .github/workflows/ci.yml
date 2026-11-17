@@ -1,0 +1,25 @@
+# Setiap push dan pull request: cek lint, jalankan tes, dan pastikan build berhasil.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Build tidak menghubungi database (semua data diambil saat ada permintaan), jadi nilai contoh cukup.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
+      SESSION_SECRET: ci-only-secret-0123456789abcdef0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
