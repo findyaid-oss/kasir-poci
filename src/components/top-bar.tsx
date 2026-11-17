@@ -1,4 +1,5 @@
 import { db } from "@/db";
+import { lockAdminAction } from "@/app/kunci-admin/actions";
 import { logout } from "@/app/masuk/actions";
 import { requireUser } from "@/lib/auth/session";
 import { formatTime } from "@/lib/time";
@@ -16,8 +17,9 @@ export async function TopBar({ area }: { area: "kasir" | "admin" }) {
       ? [
           { href: "/kasir", label: "Jual" },
           { href: "/kasir/transaksi", label: "Transaksi" },
+          { href: "/kasir/kas", label: "Kas" },
           { href: "/kasir/tutup", label: "Tutup kas" },
-          ...(user.role === "owner" ? [{ href: "/admin", label: "Admin →" }] : []),
+          ...(user.role === "owner" ? [{ href: "/admin", label: "🔒 Admin" }] : []),
         ]
       : [
           { href: "/admin", label: "Rekap" },
@@ -25,8 +27,8 @@ export async function TopBar({ area }: { area: "kasir" | "admin" }) {
           { href: "/admin/stok", label: "Stok" },
           { href: "/admin/menu", label: "Menu" },
           { href: "/admin/shift", label: "Shift kas" },
+          { href: "/admin/transaksi", label: "Transaksi" },
           { href: "/admin/pengaturan", label: "Pengaturan" },
-          { href: "/kasir", label: "← Kasir" },
         ];
 
   return (
@@ -45,11 +47,16 @@ export async function TopBar({ area }: { area: "kasir" | "admin" }) {
             )}
           </p>
         </div>
-        <form action={logout}>
-          <button className="press shrink-0 rounded-xl border border-garis px-3 py-1.5 text-sm text-kopi-muted hover:text-cabai">
-            Keluar
-          </button>
-        </form>
+        <div className="flex shrink-0 gap-2">
+          {area === "admin" ? (
+            <form action={lockAdminAction}>
+              <button className="press rounded-xl bg-kopi px-3 py-1.5 text-sm font-medium text-white">🔒 Ke kasir</button>
+            </form>
+          ) : null}
+          <form action={logout}>
+            <button className="press rounded-xl border border-garis px-3 py-1.5 text-sm text-kopi-muted hover:text-cabai">Keluar</button>
+          </form>
+        </div>
       </div>
       <NavLinks links={links} />
     </header>

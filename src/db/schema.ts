@@ -182,6 +182,30 @@ export const saleItems = pgTable(
   (t) => [index("sale_items_sale").on(t.saleId)],
 );
 
+/* ---------- Kas masuk / keluar (di luar penjualan) ---------- */
+
+export const cashTypeEnum = pgEnum("cash_type", ["masuk", "keluar"]);
+
+/** Uang yang masuk/keluar laci selain dari penjualan, mis. beli es batu, tambah uang kembalian. */
+export const cashMovements = pgTable(
+  "cash_movements",
+  {
+    id: serial("id").primaryKey(),
+    shiftId: integer("shift_id")
+      .notNull()
+      .references(() => shifts.id),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id),
+    businessDate: date("business_date").notNull(),
+    type: cashTypeEnum("type").notNull(),
+    amount: integer("amount").notNull(),
+    note: text("note").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("cash_movements_shift").on(t.shiftId), index("cash_movements_date").on(t.businessDate)],
+);
+
 /* ---------- Riwayat pergerakan stok ---------- */
 
 export const movementReasonEnum = pgEnum("movement_reason", ["jual", "batal", "belanja", "koreksi"]);
@@ -227,5 +251,6 @@ export type Shift = typeof shifts.$inferSelect;
 export type Sale = typeof sales.$inferSelect;
 export type SaleItem = typeof saleItems.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
+export type CashMovement = typeof cashMovements.$inferSelect;
 export type CheckStatus = (typeof checkStatusEnum.enumValues)[number];
 export type MenuKind = (typeof menuKindEnum.enumValues)[number];

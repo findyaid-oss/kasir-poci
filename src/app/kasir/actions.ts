@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth/session";
 import { parseRupiah } from "@/lib/money";
 import { saleSchema } from "@/lib/validation";
 import { UserError } from "@/services/errors";
+import { addCashMovement, deleteCashMovement } from "@/services/cash";
 import { createSale, voidSale } from "@/services/sales";
 import { closeShift, getOpenShift, openShift } from "@/services/shifts";
 
@@ -59,6 +60,27 @@ export async function voidSaleAction(_prev: ActionState, formData: FormData): Pr
   return { ok: true, message: "Transaksi dibatalkan, stok dikembalikan." };
 }
 
+/* ---------- Kas masuk / keluar ---------- */
+
+export async function addCashAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const type = formData.get("type") === "masuk" ? "masuk" : "keluar";
+  const amount = parseRupiah(formData.get("amount"));
+  if (amount === null) return { error: "Isi jumlah uang." };
+  const res = await guard(() => addCashMovement(db, { userId: user.userId, type, amount, note: String(formData.get("note") ?? "") }));
+  if ("error" in res) return res;
+  refresh();
+  return { ok: true, message: `Kas ${type} ${new Intl.NumberFormat("id-ID").format(amount)} dicatat.` };
+}
+
+export async function deleteCashAction(formData: FormData) {
+  const user = await requireUser();
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id)) return;
+  const res = await guard(() => deleteCashMovement(db, { id, role: user.role }));
+  if (!(res && typeof res === "object" && "error" in res)) refresh();
+}
+
 /* ---------- Tutup kas ---------- */
 
 export type CloseResult = ActionState & {
@@ -83,7 +105,7 @@ export async function closeShiftAction(_prev: CloseResult, formData: FormData): 
     }
   }
   const expectedChecks = Number(formData.get("checkCount") ?? 0);
-  if (checks.length < expectedChecks) return { error: "Lengkapi cek bahan: pilih Aman, Menipis, atau Habis untuk setiap bahan." };
+  if (checks.length < expectedChecks) return { error: "Lengkapi cek bahan: pilih Masih banyak, Setengah, atau Habis untuk setiap bahan." };
 
   const res = await guard(() =>
     closeShift(db, {

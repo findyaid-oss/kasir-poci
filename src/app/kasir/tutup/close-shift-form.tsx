@@ -9,20 +9,24 @@ import { closeShiftAction, type CloseResult } from "../actions";
 
 type Status = "aman" | "menipis" | "habis";
 const OPTIONS: { value: Status; label: string; on: string }[] = [
-  { value: "aman", label: "Aman", on: "border-daun bg-daun text-white" },
-  { value: "menipis", label: "Menipis", on: "border-kunyit bg-kunyit text-white" },
+  { value: "aman", label: "Masih banyak", on: "border-daun bg-daun text-white" },
+  { value: "menipis", label: "Setengah", on: "border-kunyit bg-kunyit text-white" },
   { value: "habis", label: "Habis", on: "border-cabai bg-cabai text-white" },
 ];
 
 export function CloseShiftForm({
   openingCash,
   cashSales,
+  cashIn,
+  cashOut,
   qrisSales,
   transactions,
   manual,
 }: {
   openingCash: number;
   cashSales: number;
+  cashIn: number;
+  cashOut: number;
   qrisSales: number;
   transactions: number;
   manual: { id: number; name: string; last: Status | null }[];
@@ -30,7 +34,7 @@ export function CloseShiftForm({
   const [state, action, pending] = useActionState<CloseResult, FormData>(closeShiftAction, {});
   const [counted, setCounted] = useState("");
   const [checks, setChecks] = useState<Record<number, Status>>({});
-  const expected = openingCash + cashSales;
+  const expected = openingCash + cashSales + cashIn - cashOut;
   const countedNum = parseRupiah(counted);
   const diff = countedNum === null ? null : countedNum - expected;
 
@@ -66,6 +70,8 @@ export function CloseShiftForm({
         <dl className="grid gap-1.5 text-sm">
           <Row label="Kas awal" value={formatRupiah(openingCash)} />
           <Row label={`Penjualan tunai (${transactions} transaksi total)`} value={`+ ${formatRupiah(cashSales)}`} />
+          {cashIn ? <Row label="Kas masuk" value={`+ ${formatRupiah(cashIn)}`} /> : null}
+          {cashOut ? <Row label="Kas keluar" value={`− ${formatRupiah(cashOut)}`} /> : null}
           <Row label="Seharusnya ada di laci" value={formatRupiah(expected)} bold />
           <Row label="QRIS (tidak masuk laci)" value={formatRupiah(qrisSales)} muted />
         </dl>

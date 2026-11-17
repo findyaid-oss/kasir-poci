@@ -2,6 +2,7 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { ingredients, sales, shifts, stockChecks, users, type CheckStatus, type Shift } from "@/db/schema";
 import type { Db } from "@/db/types";
 import { todayInBali } from "@/lib/time";
+import { cashTotals } from "./cash";
 import { UserError } from "./errors";
 
 export async function getOpenShift(db: Db): Promise<(Shift & { openedByName: string }) | null> {
@@ -40,7 +41,15 @@ export type ShiftTotals = {
   qrisSales: number;
   total: number;
   hpp: number;
+  /** Kas masuk / keluar di luar penjualan */
+  cashIn: number;
+  cashOut: number;
 };
+
+/** Uang yang seharusnya ada di laci: kas awal + jualan tunai + kas masuk − kas keluar. */
+export function expectedDrawer(openingCash: number, t: Pick<ShiftTotals, "cashSales" | "cashIn" | "cashOut">) {
+  return openingCash + t.cashSales + t.cashIn - t.cashOut;
+}
 
 export async function shiftTotals(db: Db, shiftId: number): Promise<ShiftTotals> {
   const [row] = await db
@@ -53,7 +62,8 @@ export async function shiftTotals(db: Db, shiftId: number): Promise<ShiftTotals>
     })
     .from(sales)
     .where(eq(sales.shiftId, shiftId));
-  return { ...row, total: row.cashSales + row.qrisSales };
+  const cash = await cashTotals(db, { shiftId });
+  return { ...row, total: row.cashSales + row.qrisSales, cashIn: cash.masuk, cashOut: cash.keluar };
 }
 
 /**
@@ -79,7 +89,7 @@ export async function closeShift(
     if (shift.closedAt) throw new UserError("Kas ini sudah ditutup.");
 
     const totals = await shiftTotals(tx as unknown as Db, shift.id);
-    const expectedCash = shift.openingCash + totals.cashSales;
+    const expectedCash = expectedDrawer(shift.openingCash, totals);
 
     const [closed] = await tx
       .update(shifts)

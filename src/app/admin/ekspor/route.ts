@@ -1,20 +1,21 @@
 import ExcelJS from "exceljs";
 import { db } from "@/db";
-import { getUser } from "@/lib/auth/session";
+import { getUser, isAdminUnlocked } from "@/lib/auth/session";
 import { formatDateTime, isIsoDate, shiftDate, todayInBali } from "@/lib/time";
-import { dailyTotals, exportRows } from "@/services/reports";
+import { dailyTotals, exportCashRows, exportRows } from "@/services/reports";
 
 /** Unduh rekap penjualan sebagai file Excel: sheet "Per hari" dan sheet "Detail". */
 export async function GET(request: Request) {
   const user = await getUser();
   if (!user || user.role !== "owner") return new Response("Hanya pemilik yang bisa mengekspor.", { status: 403 });
+  if (!(await isAdminUnlocked(user.userId))) return Response.redirect(new URL("/kunci-admin", request.url), 303);
 
   const url = new URL(request.url);
   const to = isIsoDate(url.searchParams.get("sampai")) ? url.searchParams.get("sampai")! : todayInBali();
   const fromRaw = url.searchParams.get("dari");
   const from = isIsoDate(fromRaw) && fromRaw <= to ? fromRaw : shiftDate(to, -29);
 
-  const [days, rows] = await Promise.all([dailyTotals(db, from, to), exportRows(db, from, to)]);
+  const [days, rows, cashRows] = await Promise.all([dailyTotals(db, from, to), exportRows(db, from, to), exportCashRows(db, from, to)]);
 
   const wb = new ExcelJS.Workbook();
   const rp = '"Rp"#,##0';
@@ -66,6 +67,27 @@ export async function GET(request: Request) {
     })),
   );
   detail.getRow(1).font = { bold: true };
+
+  const kas = wb.addWorksheet("Kas masuk-keluar");
+  kas.columns = [
+    { header: "Tanggal", key: "date", width: 12 },
+    { header: "Waktu", key: "time", width: 16 },
+    { header: "Oleh", key: "by", width: 14 },
+    { header: "Jenis", key: "type", width: 10 },
+    { header: "Jumlah", key: "amount", width: 14, style: { numFmt: rp } },
+    { header: "Keterangan", key: "note", width: 36 },
+  ];
+  kas.addRows(
+    cashRows.map((c) => ({
+      date: c.businessDate,
+      time: formatDateTime(c.createdAt),
+      by: c.by,
+      type: c.type === "masuk" ? "Masuk" : "Keluar",
+      amount: c.type === "masuk" ? c.amount : -c.amount,
+      note: c.note,
+    })),
+  );
+  kas.getRow(1).font = { bold: true };
 
   const buffer = await wb.xlsx.writeBuffer();
   return new Response(buffer, {

@@ -12,12 +12,13 @@ Kasir sederhana untuk kios es teh Poci, minuman sachet, dan gorengan frozen. Dib
 1. **Masuk** dengan memilih nama lalu mengetik PIN.
 2. **Buka kas**: isi jumlah uang yang ada di laci.
 3. **Jualan**: ketuk menu, atur jumlah, ketuk topping (Boba / Oreo) bila perlu, lalu **Tambah**. Ketuk **Bayar**, pilih **Tunai** (ketuk uang yang diterima, kembalian muncul) atau **QRIS**, lalu **Simpan**.
-4. **Salah input?** Buka **Transaksi**, tekan **Batalkan**, dan tulis alasannya. Stok otomatis dikembalikan. Karyawan hanya bisa membatalkan selama kas shift-nya masih terbuka.
-5. **Tutup kas** sebelum pulang:
+4. **Kas masuk / keluar**: uang yang keluar/masuk laci selain jualan (beli es batu, tambah uang kembalian) dicatat di menu **Kas**, dan otomatis ikut dihitung saat tutup kas.
+5. **Salah input?** Buka **Transaksi**, tekan **Batalkan**, dan tulis alasannya. Stok otomatis dikembalikan. Karyawan hanya bisa membatalkan selama kas shift-nya masih terbuka.
+6. **Tutup kas** sebelum pulang:
    - Hitung uang di laci. Sistem menunjukkan berapa yang seharusnya ada dan selisihnya.
-   - Cek kentang, sosis, nugget, saus, tusuk, tisu, dan film seal: pilih **Aman / Menipis / Habis**.
+   - Cek teh celup, gula, kentang, sosis, nugget, saus, tusuk, tisu, dan film seal: pilih **Masih banyak / Setengah / Habis**.
 
-**Pemilik** (menu **Admin**)
+**Pemilik** (menu **Admin**, selalu minta PIN lagi dan terkunci otomatis setelah 30 menit)
 - **Rekap**:
   - omzet (tunai dan QRIS)
   - laba kotor
@@ -32,18 +33,18 @@ Kasir sederhana untuk kios es teh Poci, minuman sachet, dan gorengan frozen. Dib
   - **Hitung ulang**: samakan stok dengan hitungan di kios.
   - **Atur**: ubah batas peringatan.
 - **Menu**: ubah harga jual, HPP, dan resep, atau tambah menu baru. Rekap hari-hari lalu tidak ikut berubah karena harga disalin saat transaksi.
-- **Shift kas**: setiap buka–tutup kas, selisih uang, dan hasil cek bahan.
+- **Shift kas**: setiap buka–tutup kas, kas masuk/keluar, selisih uang, dan hasil cek bahan.
+- **Transaksi**: centang lalu **Hapus terpilih**, atau **Reset semua penjualan** (ketik `RESET`) untuk membersihkan data uji coba. Stok yang terpakai dikembalikan; menu, stok, pengguna, dan pengaturan tidak berubah.
 - **Pengaturan**: tambah karyawan dan ganti PIN, atur biaya tetap, modal awal, tanggal mulai usaha, dan target harian.
 
 ### Dua jenis stok
 - **Otomatis.** Berkurang setiap penjualan sesuai resep. Termasuk:
   - sachet minuman dan SKM
-  - teh celup (½ kantong per cup)
-  - gula (15 g per es teh), boba (30 g), oreo (10 g)
+  - boba (30 g), oreo (10 g)
   - cup 16 oz, sedotan, cup plastik kecil, lunch box L
 
   Peringatan muncul kalau stok ≤ batas: sachet 3, kemasan 10.
-- **Cek manual.** Untuk film seal, kentang, sosis, nugget, saus, tusuk, dan tisu. Angkanya tidak dihitung, cukup dicek karyawan saat tutup kas.
+- **Cek manual.** Untuk teh celup, gula, film seal, kentang, sosis, nugget, saus, tusuk, dan tisu. Angkanya tidak dihitung, cukup dicek karyawan saat tutup kas: **Masih banyak / Setengah / Habis**.
 
 Stok boleh minus. Penjualan tidak pernah ditolak hanya karena catatan stok belum diisi, tetapi menunya diberi tanda "stok kurang" dan muncul di daftar **Perlu belanja**.
 

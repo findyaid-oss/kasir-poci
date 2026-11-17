@@ -39,7 +39,15 @@ async function Content() {
   return (
     <>
       <PageHeading title="Tutup kas">Hitung uang di laci dan cek bahan sebelum pulang.</PageHeading>
-      <CloseShiftForm openingCash={shift.openingCash} cashSales={totals.cashSales} qrisSales={totals.qrisSales} transactions={totals.transactions} manual={manual} />
+      <CloseShiftForm
+        openingCash={shift.openingCash}
+        cashSales={totals.cashSales}
+        cashIn={totals.cashIn}
+        cashOut={totals.cashOut}
+        qrisSales={totals.qrisSales}
+        transactions={totals.transactions}
+        manual={manual}
+      />
     </>
   );
 }

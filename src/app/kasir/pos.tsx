@@ -77,7 +77,7 @@ export function Pos({
             aria-expanded={showLow}
             className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium"
           >
-            <span>⚠️ {lowStock.length} bahan menipis / habis</span>
+            <span>⚠️ {lowStock.length} bahan perlu dicek / dibeli</span>
             <span className="text-kopi-muted">{showLow ? "Tutup" : "Lihat"}</span>
           </button>
           {showLow ? (

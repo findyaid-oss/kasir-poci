@@ -5,7 +5,9 @@ import type { Db } from "@/db/types";
 import { seedCatalog } from "@/services/catalog";
 import { capitalProgress, dailyTotals, getSettings, itemSummary } from "@/services/reports";
 import { createSale, voidSale } from "@/services/sales";
-import { closeShift, openShift } from "@/services/shifts";
+import { addCashMovement, deleteCashMovement } from "@/services/cash";
+import { deleteSales, resetAllSales } from "@/services/maintenance";
+import { closeShift, getOpenShift, openShift, shiftTotals } from "@/services/shifts";
 import { addPurchase, listLowStock, setStock } from "@/services/stock";
 import { createUser, verifyPin } from "@/services/users";
 import { createTestDb } from "./test-db";
@@ -63,8 +65,9 @@ describe("penjualan", () => {
     expect(sale.change).toBe(6_000);
     expect(sale.businessDate).toBe("2026-11-20");
 
-    expect(await stockOf("Teh celup Poci")).toBe(999); // 2 × ½ kantong
-    expect(await stockOf("Gula pasir")).toBe(970); // 2 × 15 g
+    // Teh celup & gula dicek manual, tidak dipotong angkanya
+    expect(await stockOf("Teh celup Poci")).toBe(1000);
+    expect(await stockOf("Gula pasir")).toBe(1000);
     expect(await stockOf("Susu kental manis")).toBe(998);
     expect(await stockOf("Cup 16 oz")).toBe(998);
     expect(await stockOf("Sedotan")).toBe(998);
@@ -209,5 +212,73 @@ describe("login PIN", () => {
     await expect(verifyPin(db, staffId, "1234", NOW)).rejects.toThrow("Coba lagi");
     const later = new Date(NOW.getTime() + 6 * 60_000);
     expect((await verifyPin(db, staffId, "1234", later)).id).toBe(staffId);
+  });
+});
+
+describe("kas masuk / keluar", () => {
+  it("ikut dihitung di uang yang seharusnya ada di laci", async () => {
+    const shift = await openShift(db, { userId: staffId, openingCash: 50_000 }, NOW);
+    await expect(addCashMovement(db, { userId: staffId, type: "keluar", amount: 10_000, note: "" })).rejects.toThrow("keterangan");
+    await addCashMovement(db, { userId: staffId, type: "keluar", amount: 12_000, note: "beli es batu" }, NOW);
+    const masuk = await addCashMovement(db, { userId: ownerId, type: "masuk", amount: 20_000, note: "tambah uang kembalian" }, NOW);
+    await createSale(
+      db,
+      { userId: staffId, paymentMethod: "tunai", lines: [{ menuItemId: await menuId("Milo"), qty: 1, toppingIds: [] }] },
+      NOW,
+    );
+    const totals = await shiftTotals(db, shift.id);
+    expect(totals.cashIn).toBe(20_000);
+    expect(totals.cashOut).toBe(12_000);
+
+    const res = await closeShift(db, { shiftId: shift.id, userId: staffId, countedCash: 64_000, checks: [] });
+    expect(res.expectedCash).toBe(50_000 + 6_000 + 20_000 - 12_000);
+    expect(res.difference).toBe(0);
+
+    await expect(deleteCashMovement(db, { id: masuk.id, role: "staff" })).rejects.toThrow("sudah ditutup");
+    await deleteCashMovement(db, { id: masuk.id, role: "owner" });
+  });
+
+  it("menolak kas masuk/keluar kalau kas belum dibuka", async () => {
+    await expect(addCashMovement(db, { userId: staffId, type: "masuk", amount: 1000, note: "modal" })).rejects.toThrow("belum dibuka");
+  });
+});
+
+describe("hapus & reset transaksi (untuk uji coba)", () => {
+  it("hapus terpilih mengembalikan stok; transaksi yang sudah dibatalkan tidak dobel", async () => {
+    await openShift(db, { userId: staffId, openingCash: 0 }, NOW);
+    const milo = await menuId("Milo");
+    const a = await createSale(db, { userId: staffId, paymentMethod: "qris", lines: [{ menuItemId: milo, qty: 2, toppingIds: [] }] }, NOW);
+    const b = await createSale(db, { userId: staffId, paymentMethod: "qris", lines: [{ menuItemId: milo, qty: 1, toppingIds: [] }] }, NOW);
+    const c = await createSale(db, { userId: staffId, paymentMethod: "qris", lines: [{ menuItemId: milo, qty: 3, toppingIds: [] }] }, NOW);
+    await voidSale(db, { saleId: b.id, userId: staffId, role: "staff", reason: "salah input" });
+    expect(await stockOf("Milo")).toBe(995);
+
+    expect(await deleteSales(db, [a.id, b.id])).toBe(2);
+    expect(await stockOf("Milo")).toBe(997); // hanya transaksi c yang tersisa
+    expect(await stockOf("Cup 16 oz")).toBe(997);
+    const [day] = await dailyTotals(db, "2026-11-20", "2026-11-20");
+    expect(day.cups).toBe(3);
+    expect(c.id).toBeGreaterThan(0);
+  });
+
+  it("reset semua menghapus transaksi, shift, dan kas; stok kembali; menu tetap", async () => {
+    await openShift(db, { userId: staffId, openingCash: 10_000 }, NOW);
+    await createSale(
+      db,
+      { userId: staffId, paymentMethod: "tunai", lines: [{ menuItemId: await menuId("Es Teh Susu"), qty: 2, toppingIds: [await menuId("Boba")] }] },
+      NOW,
+    );
+    await addCashMovement(db, { userId: staffId, type: "keluar", amount: 5_000, note: "beli es batu" }, NOW);
+    expect(await stockOf("Boba mentah")).toBe(940);
+
+    expect(await resetAllSales(db)).toBe(1);
+    expect(await stockOf("Boba mentah")).toBe(1000);
+    expect(await stockOf("Susu kental manis")).toBe(1000);
+    expect(await getOpenShift(db)).toBeNull();
+    expect(await dailyTotals(db, "2026-11-20", "2026-11-20")).toEqual([]);
+    expect(await menuId("Es Teh Susu")).toBeGreaterThan(0);
+
+    // Bisa langsung buka kas lagi
+    await openShift(db, { userId: staffId, openingCash: 0 }, NOW);
   });
 });

@@ -32,3 +32,27 @@ export async function verifySession(token: string | undefined): Promise<SessionP
     return null;
   }
 }
+
+/* ---------- Kunci admin: pemilik harus memasukkan PIN lagi untuk membuka halaman Admin ---------- */
+
+export const ADMIN_COOKIE = "kp_admin";
+export const ADMIN_MINUTES = 30;
+
+export async function signAdminUnlock(userId: number): Promise<string> {
+  return new SignJWT({ userId, purpose: "admin" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${ADMIN_MINUTES}m`)
+    .sign(secretKey());
+}
+
+/** userId pemilik yang sedang membuka admin, atau null kalau terkunci / kedaluwarsa. */
+export async function verifyAdminUnlock(token: string | undefined): Promise<number | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify<{ userId: number; purpose: string }>(token, secretKey(), { algorithms: ["HS256"] });
+    return payload.purpose === "admin" && typeof payload.userId === "number" ? payload.userId : null;
+  } catch {
+    return null;
+  }
+}
