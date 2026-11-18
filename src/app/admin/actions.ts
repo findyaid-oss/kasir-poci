@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, not } from "drizzle-orm";
+import { eq, not, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
@@ -81,6 +81,33 @@ export async function updateIngredientAction(_prev: FormState, formData: FormDat
       .where(eq(ingredients.id, id));
     return "Pengaturan bahan disimpan.";
   });
+}
+
+/**
+ * Pindahkan bahan antara "hitung otomatis" (angka stok, terpotong tiap penjualan) dan
+ * "cek manual" (Masih banyak / Setengah / Habis saat tutup kas).
+ */
+export async function makeManualAction(formData: FormData) {
+  await setTracking(formData, "manual");
+}
+
+export async function makeAutoAction(formData: FormData) {
+  await setTracking(formData, "auto");
+}
+
+async function setTracking(formData: FormData, tracking: "auto" | "manual") {
+  await requireOwner();
+  const id = Number(formData.get("ingredientId"));
+  if (!Number.isInteger(id)) return;
+  await db
+    .update(ingredients)
+    .set(
+      tracking === "manual"
+        ? { tracking, group: "Cek manual", checkStatus: sql`coalesce(${ingredients.checkStatus}, 'aman')` }
+        : { tracking, group: "Lain-lain" },
+    )
+    .where(eq(ingredients.id, id));
+  refresh();
 }
 
 export async function createIngredientAction(_prev: FormState, formData: FormData): Promise<FormState> {

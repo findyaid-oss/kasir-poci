@@ -63,10 +63,12 @@ export const SEED_INGREDIENTS: SeedIngredient[] = [
   { name: "Oreo crumb", group: "Topping", unit: "g", tracking: "auto", lowThreshold: 100, packLabel: "bungkus", packSize: 500 },
 
   // Kemasan
-  { name: "Cup 16 oz", group: "Kemasan", unit: "pcs", tracking: "auto", lowThreshold: 10, packLabel: "pak", packSize: 50, stock: 150 },
   { name: "Sedotan", group: "Kemasan", unit: "pcs", tracking: "auto", lowThreshold: 10, packLabel: "pak", packSize: 100 },
-  { name: "Cup plastik kecil", group: "Kemasan", unit: "pcs", tracking: "auto", lowThreshold: 10, packLabel: "pak", packSize: 50 },
-  { name: "Lunch box L", group: "Kemasan", unit: "pcs", tracking: "auto", lowThreshold: 10, packLabel: "pak", packSize: 50, stock: 50 },
+  // Kemasan lain cukup dicek manual (Masih banyak / Setengah / Habis), tidak dihitung per buah.
+  { name: "Cup 16 oz", group: "Cek manual", unit: "pcs", tracking: "manual", lowThreshold: 0 },
+  { name: "Cup 18 oz", group: "Cek manual", unit: "pcs", tracking: "manual", lowThreshold: 0 },
+  { name: "Cup plastik kecil", group: "Cek manual", unit: "pcs", tracking: "manual", lowThreshold: 0 },
+  { name: "Lunch box L", group: "Cek manual", unit: "pcs", tracking: "manual", lowThreshold: 0 },
 
   // Dicek manual saat tutup kas
   { name: "Film seal", group: "Cek manual", unit: "gulung", tracking: "manual", lowThreshold: 0 },

@@ -8,7 +8,7 @@ import { requireOwner } from "@/lib/auth/session";
 import { CHECK_LABEL } from "@/lib/labels";
 import { formatDateTime, formatQty } from "@/lib/time";
 import { isLow, listIngredients } from "@/services/stock";
-import { setCheckStatusAction } from "../actions";
+import { makeAutoAction, setCheckStatusAction } from "../actions";
 import { IngredientActions, NewIngredientForm } from "./stock-forms";
 
 export const metadata: Metadata = { title: "Stok" };
@@ -122,7 +122,7 @@ async function Stok() {
                   <p className="font-medium">{m.name}</p>
                   <p className="text-xs text-kopi-muted">{m.checkedAt ? `Dicek ${formatDateTime(m.checkedAt)}` : "Belum pernah dicek"}</p>
                 </div>
-                <form action={setCheckStatusAction} className="flex gap-1">
+                <form action={setCheckStatusAction} className="flex flex-wrap items-center gap-1">
                   <input type="hidden" name="ingredientId" value={m.id} />
                   {(["aman", "menipis", "habis"] as const).map((s) => {
                     const on = m.checkStatus === s;
@@ -139,6 +139,13 @@ async function Stok() {
                       </button>
                     );
                   })}
+                  <button
+                    formAction={makeAutoAction}
+                    title="Jadikan hitung otomatis (angka stok, terpotong tiap penjualan)"
+                    className="press ml-1 rounded-lg px-2 py-1 text-xs text-kopi-muted underline underline-offset-2 hover:text-teh"
+                  >
+                    hitung angka
+                  </button>
                 </form>
               </li>
             ))}
