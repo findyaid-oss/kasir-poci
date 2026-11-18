@@ -6,6 +6,7 @@ import { formatQty } from "@/lib/time";
 import {
   addPurchaseAction,
   createIngredientAction,
+  makeManualAction,
   setStockAction,
   updateIngredientAction,
   type FormState,
@@ -138,6 +139,16 @@ function SettingsForm({ i }: { i: Ingredient }) {
       <button disabled={pending} className={buttonClass.secondary}>
         {pending ? "Menyimpan…" : "Simpan pengaturan"}
       </button>
+      <div className="mt-1 rounded-xl bg-white p-3 text-sm">
+        <p className="font-medium">Cara hitung</p>
+        <p className="mb-2 text-kopi-muted">
+          Repot menghitung bahan ini satu per satu? Jadikan <b>cek manual</b>: tidak dihitung angkanya, cukup dicek Masih banyak / Setengah /
+          Habis saat tutup kas.
+        </p>
+        <button formAction={makeManualAction} className={buttonClass.small}>
+          Jadikan cek manual
+        </button>
+      </div>
     </form>
   );
 }

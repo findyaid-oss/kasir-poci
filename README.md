@@ -31,7 +31,7 @@ Kasir sederhana untuk kios es teh Poci, minuman sachet, dan gorengan frozen. Dib
 - **Stok**:
   - **Belanja**: isi jumlah kemasan × isi per kemasan. Isi per kemasan diingat untuk belanja berikutnya.
   - **Hitung ulang**: samakan stok dengan hitungan di kios.
-  - **Atur**: ubah batas peringatan.
+  - **Atur**: ubah batas peringatan, atau **Jadikan cek manual** kalau bahan itu repot dihitung. Bahan cek manual bisa dikembalikan lewat tombol **hitung angka**.
 - **Menu**: ubah harga jual, HPP, dan resep, atau tambah menu baru. Rekap hari-hari lalu tidak ikut berubah karena harga disalin saat transaksi.
 - **Shift kas**: setiap buka–tutup kas, kas masuk/keluar, selisih uang, dan hasil cek bahan.
 - **Transaksi**: centang lalu **Hapus terpilih**, atau **Reset semua penjualan** (ketik `RESET`) untuk membersihkan data uji coba. Stok yang terpakai dikembalikan; menu, stok, pengguna, dan pengaturan tidak berubah.
@@ -41,10 +41,10 @@ Kasir sederhana untuk kios es teh Poci, minuman sachet, dan gorengan frozen. Dib
 - **Otomatis.** Berkurang setiap penjualan sesuai resep. Termasuk:
   - sachet minuman dan SKM
   - boba (30 g), oreo (10 g)
-  - cup 16 oz, sedotan, cup plastik kecil, lunch box L
+  - sedotan
 
   Peringatan muncul kalau stok ≤ batas: sachet 3, kemasan 10.
-- **Cek manual.** Untuk teh celup, gula, film seal, kentang, sosis, nugget, saus, tusuk, dan tisu. Angkanya tidak dihitung, cukup dicek karyawan saat tutup kas: **Masih banyak / Setengah / Habis**.
+- **Cek manual.** Untuk teh celup, gula, cup 16 oz, cup 18 oz, cup plastik kecil, lunch box L, film seal, kentang, sosis, nugget, saus, tusuk, dan tisu. Angkanya tidak dihitung, cukup dicek karyawan saat tutup kas: **Masih banyak / Setengah / Habis**.
 
 Stok boleh minus. Penjualan tidak pernah ditolak hanya karena catatan stok belum diisi, tetapi menunya diberi tanda "stok kurang" dan muncul di daftar **Perlu belanja**.
 

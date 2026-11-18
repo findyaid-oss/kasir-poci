@@ -69,7 +69,7 @@ describe("penjualan", () => {
     expect(await stockOf("Teh celup Poci")).toBe(1000);
     expect(await stockOf("Gula pasir")).toBe(1000);
     expect(await stockOf("Susu kental manis")).toBe(998);
-    expect(await stockOf("Cup 16 oz")).toBe(998);
+    expect(await stockOf("Cup 16 oz")).toBe(1000); // kemasan cup dicek manual
     expect(await stockOf("Sedotan")).toBe(998);
     expect(await stockOf("Boba mentah")).toBe(940); // 2 × 30 g
   });
@@ -102,19 +102,19 @@ describe("penjualan", () => {
       ),
     );
     expect(await stockOf("Milo")).toBe(992);
-    expect(await stockOf("Cup 16 oz")).toBe(992);
+    expect(await stockOf("Sedotan")).toBe(992);
   });
 
   it("pembatalan mengembalikan stok; karyawan tidak bisa membatalkan setelah tutup kas", async () => {
     const shift = await openShift(db, { userId: staffId, openingCash: 0 }, NOW);
     const sale = await createSale(
       db,
-      { userId: staffId, paymentMethod: "qris", lines: [{ menuItemId: await menuId("Mix Platter"), qty: 1, toppingIds: [] }] },
+      { userId: staffId, paymentMethod: "qris", lines: [{ menuItemId: await menuId("ExtraJoss Susu"), qty: 1, toppingIds: [] }] },
       NOW,
     );
-    expect(await stockOf("Lunch box L")).toBe(999);
+    expect(await stockOf("Susu kental manis")).toBe(999);
     await voidSale(db, { saleId: sale.id, userId: staffId, role: "staff", reason: "salah input" });
-    expect(await stockOf("Lunch box L")).toBe(1000);
+    expect(await stockOf("Susu kental manis")).toBe(1000);
     await expect(voidSale(db, { saleId: sale.id, userId: staffId, role: "staff", reason: "lagi" })).rejects.toThrow("sudah dibatalkan");
 
     const sale2 = await createSale(
@@ -162,6 +162,26 @@ describe("shift kas", () => {
 });
 
 describe("stok", () => {
+  it("kemasan cup, cup kecil, lunch box dicek manual dan tidak terpotong", async () => {
+    await openShift(db, { userId: staffId, openingCash: 0 }, NOW);
+    await createSale(
+      db,
+      {
+        userId: staffId,
+        paymentMethod: "qris",
+        lines: [
+          { menuItemId: await menuId("Kentang Goreng"), qty: 1, toppingIds: [] },
+          { menuItemId: await menuId("Sosis (4 pcs)"), qty: 1, toppingIds: [] },
+        ],
+      },
+      NOW,
+    );
+    expect(await stockOf("Lunch box L")).toBe(1000);
+    expect(await stockOf("Cup plastik kecil")).toBe(1000);
+    const [cup18] = await db.select().from(ingredients).where(eq(ingredients.name, "Cup 18 oz"));
+    expect(cup18.tracking).toBe("manual");
+  });
+
   it("belanja = jumlah kemasan × isi, isi diingat; hitung ulang mencatat koreksi", async () => {
     await setStock(db, { ingredientId: (await db.select().from(ingredients).where(eq(ingredients.name, "Milo")))[0].id, stock: 2, userId: ownerId });
     expect((await listLowStock(db)).map((l) => l.name)).toContain("Milo");
@@ -255,7 +275,7 @@ describe("hapus & reset transaksi (untuk uji coba)", () => {
 
     expect(await deleteSales(db, [a.id, b.id])).toBe(2);
     expect(await stockOf("Milo")).toBe(997); // hanya transaksi c yang tersisa
-    expect(await stockOf("Cup 16 oz")).toBe(997);
+    expect(await stockOf("Sedotan")).toBe(997);
     const [day] = await dailyTotals(db, "2026-11-20", "2026-11-20");
     expect(day.cups).toBe(3);
     expect(c.id).toBeGreaterThan(0);
